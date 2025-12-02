@@ -14,15 +14,15 @@ impl Dial {
     }
 
     fn rotate(&mut self, rotation: &Rotation) -> usize {
-        let full_rotations = (rotation.amount() / 100).abs() as usize;
-        let part_rotation = rotation.amount() - 100 * full_rotations as isize;
+        let full_rotations = (rotation.amount() / 100).unsigned_abs();
+        let part_rotation = rotation.amount() % 100;
         let starts_at_0 = self.position == 0;
         match rotation {
             Rotation::L(_) => {
-                self.position = self.position - part_rotation;
+                self.position -= part_rotation;
             }
             Rotation::R(_) => {
-                self.position = self.position + part_rotation;
+                self.position += part_rotation;
             }
         }
         let mut crossed = full_rotations;
@@ -30,9 +30,7 @@ impl Dial {
             if self.position == 0 {
                 crossed += 1;
             }
-            if self.position < 0 {
-                crossed += 1;
-            } else if self.position >= 100 {
+            if !(0..100).contains(&self.position) {
                 crossed += 1;
             }
         }
@@ -42,7 +40,7 @@ impl Dial {
             self.position -= 100;
         }
 
-        return crossed;
+        crossed
     }
 }
 
@@ -54,8 +52,7 @@ enum Rotation {
 impl Rotation {
     fn amount(&self) -> isize {
         match self {
-            Rotation::L(steps) => *steps,
-            Rotation::R(steps) => *steps,
+            Rotation::L(steps) | Rotation::R(steps) => *steps,
         }
     }
 }
