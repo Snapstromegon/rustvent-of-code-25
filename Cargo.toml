@@ -1,0 +1,9 @@
+[package]
+name = "rustvent-of-code-25"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.100"
+clap = { version = "4", features = ["derive"] }
+rayon = "1.10.0"
