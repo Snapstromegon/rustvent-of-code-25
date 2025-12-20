@@ -35,6 +35,26 @@ fn find_doubles_in_range(range: &RangeInclusive<usize>) -> Vec<usize> {
         .collect()
 }
 
+fn has_number_repetitions(number: usize) -> bool {
+    // A repetition is a pattern like 11241124 or 123123123
+    let num_as_str = number.to_string();
+    let chars: Vec<char> = num_as_str.chars().collect();
+    for i in (1..=(chars.len() / 2)).filter(|i| chars.len().is_multiple_of(*i)) {
+        let pattern = &chars[0..i];
+        if chars.chunks(i).all(|chunk| chunk == pattern) {
+            return true;
+        }
+    }
+    false
+}
+
+fn get_range_repitions(range: &RangeInclusive<usize>) -> Vec<usize> {
+    range
+        .clone()
+        .filter(|n| has_number_repetitions(*n))
+        .collect()
+}
+
 pub struct Day;
 
 impl Solution for Day {
@@ -48,8 +68,14 @@ impl Solution for Day {
         )
     }
 
-    fn part2(&self, _input: &str) -> Option<SolvedValue> {
-        None
+    fn part2(&self, input: &str) -> Option<SolvedValue> {
+        Some(
+            parse_input_to_ranges(input)
+                .iter()
+                .flat_map(get_range_repitions)
+                .sum::<usize>()
+                .into(),
+        )
     }
 }
 
@@ -75,11 +101,11 @@ mod tests {
     #[test]
     fn test_part2_example() {
         let input = read_input(DAY, true, 2).unwrap();
-        assert_eq!(Day.part2(&input), None);
+        assert_eq!(Day.part2(&input), Some(4_174_379_265.into()));
     }
     #[test]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
-        assert_eq!(Day.part2(&input), None);
+        assert_eq!(Day.part2(&input), Some(11_323_661_261.into()));
     }
 }
