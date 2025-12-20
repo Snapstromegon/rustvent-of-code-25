@@ -20,9 +20,21 @@ fn max_battery_with_index(iter: &[Battery]) -> (usize, &Battery) {
 struct Bank(Vec<Battery>);
 
 impl Bank {
-    fn max_power_2(&self) -> Battery {
+    fn max_power_2(&self) -> usize {
         let (max_i, max) = max_battery_with_index(&self.0[0..(self.0.len() - 1)]);
-        max * 10 + self.0.iter().skip(max_i + 1).max().unwrap()
+        *max as usize * 10 + *self.0.iter().skip(max_i + 1).max().unwrap() as usize
+    }
+
+    fn max_power_12(&self) -> usize {
+        let mut start = 0;
+        let mut res = 0;
+        for i in 0..12 {
+            let end = self.0.len() - 12 + i;
+            let (max_i, max) = max_battery_with_index(&self.0[start..=end]);
+            start += max_i + 1;
+            res = res * 10 + *max as usize;
+        }
+        res
     }
 }
 
@@ -52,16 +64,22 @@ impl Solution for Day {
         Some(
             parse_input(input)
                 .iter()
-                .inspect(|i| print!("{i:?}"))
-                .map(|bank| bank.max_power_2() as usize)
-                .inspect(|s| println!(" = {s}"))
+                .map(Bank::max_power_2)
                 .sum::<usize>()
                 .into(),
         )
     }
 
-    fn part2(&self, _input: &str) -> Option<SolvedValue> {
-        None
+    fn part2(&self, input: &str) -> Option<SolvedValue> {
+        Some(
+            parse_input(input)
+                .iter()
+                // .inspect(|x| print!("{x:?}"))
+                .map(Bank::max_power_12)
+                // .inspect(|x| println!("\t{x:?}"))
+                .sum::<usize>()
+                .into(),
+        )
     }
 }
 
@@ -87,11 +105,11 @@ mod tests {
     #[test]
     fn test_part2_example() {
         let input = read_input(DAY, true, 2).unwrap();
-        assert_eq!(Day.part2(&input), None);
+        assert_eq!(Day.part2(&input), Some(3_121_910_778_619.into()));
     }
     #[test]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
-        assert_eq!(Day.part2(&input), None);
+        assert_eq!(Day.part2(&input), Some(169_347_417_057_382.into()));
     }
 }
