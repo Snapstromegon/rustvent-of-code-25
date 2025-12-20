@@ -92,12 +92,12 @@ mod tests {
     #[test]
     fn test_part1_example() {
         let input = read_input(DAY, true, 1).unwrap();
-        assert_eq!(Day.part1(&input), None);
+        assert_eq!(Day.part1(&input), Some(1_227_775_554.into()));
     }
     #[test]
     fn test_part1_challenge() {
         let input = read_input(DAY, false, 1).unwrap();
-        assert_eq!(Day.part1(&input), None);
+        assert_eq!(Day.part1(&input), Some(9_188_031_749.into()));
     }
 
     #[test]
