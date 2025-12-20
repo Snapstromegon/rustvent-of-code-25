@@ -1,5 +1,7 @@
 use std::ops::RangeInclusive;
 
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+
 use crate::solution::{Solution, SolvedValue};
 
 fn parse_input_to_ranges(input: &str) -> Vec<RangeInclusive<usize>> {
@@ -71,7 +73,7 @@ impl Solution for Day {
     fn part2(&self, input: &str) -> Option<SolvedValue> {
         Some(
             parse_input_to_ranges(input)
-                .iter()
+                .par_iter()
                 .flat_map(get_range_repitions)
                 .sum::<usize>()
                 .into(),
