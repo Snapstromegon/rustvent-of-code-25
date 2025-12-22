@@ -182,6 +182,6 @@ mod tests {
     #[test]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
-        assert_eq!(Day.part2(&input), None);
+        assert_eq!(Day.part2(&input), Some(9_069_509_600.into()));
     }
 }
