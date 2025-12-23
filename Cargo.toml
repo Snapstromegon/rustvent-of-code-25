@@ -7,3 +7,4 @@ edition = "2024"
 anyhow = "1.0.100"
 clap = { version = "4", features = ["derive"] }
 rayon = "1.10.0"
+z3 = { version = "0.19.6", features = ["gh-release"] }

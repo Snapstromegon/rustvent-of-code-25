@@ -1,6 +1,7 @@
-use std::{collections::VecDeque, str::FromStr, usize};
+use std::str::FromStr;
 
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+use z3::{Optimize, ast::Int};
 
 use crate::solution::{Solution, SolvedValue};
 
@@ -45,35 +46,48 @@ impl Machine {
     }
 
     fn joltages(&self) -> usize {
-        let buttons_by_index: Vec<Vec<usize>> = self
-            .buttons
-            .iter()
-            .enumerate()
-            .flat_map(|(button_index, btn)| {
-                btn.iter().map(move |&light_idx| (light_idx, button_index))
+        let optimizer = Optimize::new();
+
+        let buttons: Vec<Int> = (0..self.buttons.len())
+            .map(|btn| {
+                let button = Int::fresh_const(&format!("button_{btn}"));
+                optimizer.assert(&button.ge(0));
+                button
             })
-            .fold(
-                vec![Vec::new(); self.lights.len()],
-                |mut acc, (light_idx, btn_idx)| {
-                    acc[light_idx].push(btn_idx);
-                    acc
-                },
+            .collect();
+
+        for (i, joltage) in self.joltages.iter().enumerate() {
+            let needed_buttons = self
+                .buttons
+                .iter()
+                .enumerate()
+                .filter_map(|(btn_idx, btn)| {
+                    if btn.contains(&i) {
+                        Some(&buttons[btn_idx])
+                    } else {
+                        None
+                    }
+                });
+            optimizer.assert(
+                &needed_buttons
+                    .sum::<Int>()
+                    .eq(u32::try_from(*joltage).unwrap()),
             );
-        let mut light_order = buttons_by_index
-            .iter()
-            .map(Vec::len)
-            .enumerate()
-            .collect::<Vec<(usize, usize)>>();
-        light_order.sort_by_key(|(_, button_count)| *button_count);
-        let light_order = light_order
-            .iter()
-            .map(|(light_index, _)| *light_index)
-            .collect::<Vec<usize>>();
+        }
 
-        let mut candidates = VecDeque::new();
-        candidates.push_back((vec![0; self.joltages.len()], self.buttons.clone()));
+        let button_sum = buttons.iter().sum::<Int>();
 
-        usize::MAX
+        optimizer.minimize(&button_sum);
+
+        // Get the minimum value for button_sum
+        match optimizer.check(&[]) {
+            z3::SatResult::Sat => {
+                let model = optimizer.get_model().unwrap();
+                let value = model.eval(&button_sum, true).unwrap();
+                usize::try_from(value.as_u64().unwrap()).unwrap()
+            }
+            _ => usize::MAX,
+        }
     }
 }
 
@@ -130,13 +144,12 @@ impl Solution for Day {
     }
 
     fn part2(&self, input: &str) -> Option<SolvedValue> {
-        let _machines = input
+        let machines = input
             .lines()
             .map(str::parse)
             .collect::<Result<Vec<Machine>, _>>()
             .ok()?;
-        // Some(machines.iter().map(Machine::joltages).sum::<usize>().into())
-        None
+        Some(machines.iter().map(Machine::joltages).sum::<usize>().into())
     }
 }
 
@@ -162,11 +175,11 @@ mod tests {
     #[test]
     fn test_part2_example() {
         let input = read_input(DAY, true, 2).unwrap();
-        assert_eq!(Day.part2(&input), None);
+        assert_eq!(Day.part2(&input), Some(33.into()));
     }
     #[test]
     fn test_part2_challenge() {
         let input = read_input(DAY, false, 2).unwrap();
-        assert_eq!(Day.part2(&input), None);
+        assert_eq!(Day.part2(&input), Some(16_463.into()));
     }
 }
